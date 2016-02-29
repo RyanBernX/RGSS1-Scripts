@@ -1,0 +1,712 @@
+#=====================================================================
+# 本脚本来自[url]www.66RPG.com[/url]，使用和转载请保留此信息
+#==================================================================== 
+ 
+ 
+#====================================================================
+# ■ スキルアップデート   Ver. 4.4.0                     by Claimh
+#---------------------------------------------------------------
+#     スキルごとにレベル制を導入する
+#     戦闘中にスキルを使用するほど、威力上昇、消費SP減少、命中率上昇
+#==============================================================
+ 
+module Skill_updata
+S_MIGHT = []
+S_COST = []
+S_HIT = []
+S_LEVEL = []
+S_INTER = []
+S_SLOPE = []
+S_ANIME = []
+S_ELEMENT = []
+S_STATE_P = []
+S_STATE_N = []
+#=============================================================
+# □ 自定义内容
+#==============================================================
+# 威力上升使用true/false
+SKILL_MIGHT_UP = true
+ 
+# SP消耗减少使用true/false
+SP_COST_DOWN = true       
+ 
+# 命中率上升使用true/false
+SKILL_HIT_UP = true       
+ 
+# 属性变化的使用true/false
+ELEMENT_CHANGE = true    
+ 
+# 状态变化的使用true/false
+STATE_CHANGE = true
+ 
+# 显示特技等级上升true/false
+SHOW_SKILL_LV_UP = true
+ 
+# 等级上升的声效，不用的时候就=nil
+SKILLUP_SE = "056-Right02"
+ 
+# 菜单使用计数true/false
+MENU_COUNT = false
+ 
+# 升级所需次数
+UPDATA_INTERVAL = 1
+ 
+# 等级上限
+LEVEL_LIMIT = 20
+ 
+# 威力上升率(%%)
+MIGHT_RATE = 0.5
+ 
+# SP消耗减少率(%)
+COST_RATE = 3
+ 
+# 命中上升率(%)
+HIT_RATE = 1
+ 
+#-------------------------------------------------------------
+# 特别技能的详细设定，57和61号特技分别是十字斩和扫荡，大家最熟悉的两个招数
+#----------------------------------------------------------------
+ 
+# 界限水平
+# S_LEVEL[技艺ID]＝[角色ID=>界限，…]
+S_LEVEL[57] = {1=>18, 2=>12, 3=>5, 4=>12, 5=>12, 6=>12, 7=>12, 8=>12}
+S_LEVEL[61] = {1=>12, 2=>18, 3=>15, 4=>12, 5=>12, 6=>12, 7=>12, 8=>12}
+ 
+# 技艺&actor威力上升率
+# S_MIGHT[技艺ID]＝[角色ID=>威力上升率，…]
+S_MIGHT[57] = {1=>8, 2=>2, 3=>5, 4=>2, 5=>2, 6=>2, 7=>2, 8=>2}
+S_MIGHT[61] = {1=>2, 2=>8, 3=>5, 4=>2, 5=>2, 6=>2, 7=>2, 8=>2}
+ 
+# 技艺&actorSP消费减少率
+# S_COST[技艺ID]＝[角色ID=>SP消费减少率，…]
+S_COST[57] = {1=>8, 2=>2, 3=>5, 4=>2, 5=>2, 6=>2, 7=>2, 8=>2}
+S_COST[61] = {1=>2, 2=>8, 3=>5, 4=>2, 5=>2, 6=>2, 7=>2, 8=>2}
+ 
+# 技艺&actor命中率
+# S_HIT[技艺ID]＝[角色ID=>命中上升率，…]
+S_HIT[57] = {1=>2, 2=>1, 3=>1, 4=>1, 5=>1, 6=>1, 7=>1, 8=>1}
+S_HIT[61] = {1=>1, 2=>2, 3=>1, 4=>1, 5=>1, 6=>1, 7=>1, 8=>1}
+ 
+#-----------------------------------------------------------------
+#　技能成长的具体调节
+#-----------------------------------------------------------------
+# 技艺的增长图形
+# 0：使用技艺一定回数的话提高水平
+# 1：技艺一定回数＋每水平の使用提高水平
+SKILL_PATTERN = 0
+ 
+# 技艺水平上升间隔每(使用几回Lv提高)
+#   ※没有设定的情况→基本设定被适应
+# S_INTER[技艺ID]＝[actorID=>上升间隔，…]
+S_INTER[57] = {1=>5, 2=>8, 3=>8, 4=>8, 5=>8, 6=>8, 7=>8, 8=>8}
+ 
+# スキルレベル上昇の傾き（パターン１を使用する場合のみ必要）
+#   ※設定がない場合は1となります。
+# S_SLOPE[スキルID] = [アクターID=>上昇の傾き, …]
+S_SLOPE[57] = {1=>5, 2=>8, 3=>8, 4=>8, 5=>8, 6=>8, 7=>8, 8=>8}
+ 
+#-------------------------------------------------------------
+#　技艺增长的话使之动画变化
+#  记录格式： S_ANIME[技艺ID] = [角色ID=>[[等级, 动画ID]], ･･･]
+#------------------------------------------------------------
+# 实施技艺增长的动画变化？
+USE_S_ANIME = true
+ 
+# 設定例
+# 1号角色，57号特技，lv5,lv10动画变化
+# 2号角色，Lv.11动画变化
+S_ANIME[57] = {1=>[[5, 69], [10, 70]], 2=>[[11, 70]]}
+ 
+#-------------------------------------------------------------------
+#　属性変化／状态変化
+#------------------------------------------------------------------
+# 属性変化
+# S_ELEMENT[技艺ID] = {角色ID=>{水平=>[属性ID,属性ID…]}, ････}
+S_ELEMENT[57] = {1=>{1=>[1], 2=>[2], 3=>[3]}, 2=>{1=>[2], 2=>[5]}}
+ 
+# 状态変化＋
+# S_STATE_P[技艺ID] = {角色ID=>{水平=>[属性ID,属性ID…]}, ････}
+S_STATE_P[57] = {1=>{1=>[1], 2=>[2], 3=>[3]}, 2=>{1=>[2], 2=>[5]}}
+ 
+# 状态変化－
+# S_STATE_N[技艺ID] = {角色ID=>{水平=>[属性ID,属性ID…]}, ････}
+S_STATE_N[57] = {1=>{1=>[1], 2=>[2], 3=>[3]}, 2=>{1=>[2], 2=>[5]}}
+ 
+#==================================================================
+# □ 自定义内容终了
+#==================================================================
+end
+ 
+ 
+class Game_Actor
+include Skill_updata
+attr_accessor   :skill_use      # スキル使用回数
+attr_accessor   :skill_level    # スキルレベル
+attr_accessor   :skill_power    # スキル威力更新値
+attr_accessor   :skill_sp_cost  # スキルSP消費更新値
+attr_accessor   :skill_hit      # スキル命中率
+attr_accessor   :skill_up       # レベルアップフラグ
+attr_accessor   :skill_list     # スキルEXPリスト
+alias skill_updata_init setup
+def setup(actor_id)
+   skill_updata_init(actor_id)
+   @skill_use = []
+   @skill_level = []
+   @skill_power = []
+   @skill_sp_cost = []
+   @skill_hit = []
+   @skill_up = false
+   @skill_list = []
+   for id in 1...$data_skills.size
+     @skill_use[id] = 0
+     @skill_level[id] = 0
+     @skill_power[id] = $data_skills[id].power
+     @skill_sp_cost[id] = $data_skills[id].sp_cost
+     @skill_hit[id] = $data_skills[id].hit
+     @skill_list[id] = make_skill_list(id)
+   end
+end
+ 
+#-------------------------------------------------------------
+# ● スキルEXP 計算
+#------------------------------------------------------------
+def make_skill_list(skill_id)
+   interval = S_INTER[skill_id]
+   up_interval = ( (interval != nil and interval[@actor_id] != nil) ? interval[@actor_id] : UPDATA_INTERVAL )
+   slope = S_SLOPE[skill_id]
+   up_slope = ( (slope != nil and slope[@actor_id] != nil) ? slope[@actor_id] : 1 )
+   limit = S_LEVEL[skill_id]
+   limit_lv = ( (limit != nil and limit[@actor_id] != nil) ? limit[@actor_id] : LEVEL_LIMIT )
+   list = []
+   list[0] = 0
+   for lv in 1...limit_lv+1
+     exp = 0
+     case SKILL_PATTERN
+     when 0
+       exp = up_interval * lv
+     when 1
+       exp = list[lv-1] + up_slope * lv + up_interval
+     end
+     list[lv] = exp.truncate
+   end
+   return list
+end
+end
+ 
+ 
+class Game_Battler
+include Skill_updata
+#-----------------------------------------------------------------
+# ● スキルの効果適用
+#     user  : スキルの使用者 (バトラー)
+#     skill : スキル
+#-------------------------------------------------------------
+alias skill_effect_update skill_effect
+def skill_effect(user, skill)
+   up_flag = false
+   if user.is_a?(Game_Actor) and ($scene.is_a?(Scene_Battle) or MENU_COUNT)
+     skill_update_main(user, skill)
+     skill_base = skill.dup
+     # 威力上昇
+     if SKILL_MIGHT_UP
+       skill.power = user.skill_power[skill.id]
+     end
+     # 命中率上昇
+     if SKILL_HIT_UP
+       skill.hit = user.skill_hit[skill.id]
+     end
+     # 属性変化
+     if ELEMENT_CHANGE and S_ELEMENT != []
+       ele1 = S_ELEMENT[skill.id]
+       if ele1 != nil and ele1[user.id] != nil
+         ele2 = ele1[user.id]
+         if ele2 != [] and ele2[user.skill_level[skill.id]] != nil
+           skill.element_set = ele2[user.skill_level[skill.id]]
+         end
+       end
+     end
+     # ステート変化
+     if STATE_CHANGE
+       if S_STATE_P != []
+         pst1 = S_STATE_P[skill.id]
+         if pst1 != nil and pst1[user.id] != nil
+           pst2 = pst1[user.id]
+           if pst2 != nil and pst2[user.skill_level[skill.id]] != nil
+             skill.plus_state_set = pst2[user.skill_level[skill.id]]
+#              p skill.plus_state_set
+           end
+         end
+       end
+       if S_STATE_N != []
+         nst1 = S_STATE_N[skill.id]
+         if nst1 != nil and nst1[user.id] != nil
+           nst2 = nst1[user.id]
+           if nst1 != nil and nst2[user.skill_level[skill.id]] != nil
+             skill.minus_state_set = nst2[user.skill_level[skill.id]]
+           end
+         end
+       end
+     end
+     up_flag = true
+   end
+   ret = skill_effect_update(user, skill)    # 原物
+   if up_flag
+     skill = skill_base
+     # Miss時には後戻し
+     if self.damage == "Miss"
+       skill_use_recount(user, skill)
+     end
+   end
+   return ret
+end
+ 
+#------------------------------------------------------------
+# ● スキルアップデータメイン
+#-------------------------------------------------------------
+def skill_update_main(actor, skill)
+   # スキル使用回数のカウント
+   actor.skill_use[skill.id] += 1
+   # リミット取得
+   limit = S_LEVEL[skill.id]
+   s_limit = ( (limit != nil and limit[actor.id] != nil) ? limit[actor.id] : LEVEL_LIMIT)
+   # 書き換え限界到達
+   if s_limit == false or actor.skill_level[skill.id] < s_limit
+     # レベルアップ間隔取得
+     interval = actor.skill_list[skill.id]
+     # 書き換え回数到達
+     if actor.skill_use[skill.id] == interval[actor.skill_level[skill.id]+1]
+       # スキルレベル上昇
+       actor.skill_level[skill.id] += 1
+       actor.skill_up = true
+       # 威力上昇 = 有効
+       if SKILL_MIGHT_UP
+         might = S_MIGHT[skill.id]
+         might_rate = ((might != nil and might[actor.id] != nil) ? might[actor.id] : MIGHT_RATE)
+         # 補正値更新
+         actor.skill_power[skill.id] += skill.power * might_rate / 100
+         actor.skill_power[skill.id] = actor.skill_power[skill.id].truncate
+       end
+       # SP消費減少 = 有効
+       if SP_COST_DOWN
+         cost = S_COST[skill.id]
+         cost_rate = ((cost != nil and cost[actor.id] != nil) ? cost[actor.id] : COST_RATE)
+         actor.skill_sp_cost[skill.id] -= skill.sp_cost * cost_rate / 100
+         actor.skill_sp_cost[skill.id] = actor.skill_sp_cost[skill.id].truncate
+         # SP消費が0以下はありえない
+         if actor.skill_sp_cost[skill.id] < 0
+           actor.skill_sp_cost[skill.id] = 0
+         end
+       end
+       # 命中率上昇 = 有効
+       if SKILL_HIT_UP
+         hit = S_HIT[skill.id]
+         hit_rate = ((hit != nil and hit[actor.id] != nil) ? hit[actor.id] : HIT_RATE)
+         actor.skill_hit[skill.id] += skill.hit * hit_rate / 100
+         actor.skill_hit[skill.id] = actor.skill_hit[skill.id].truncate
+         # 100以上はありえない
+         if actor.skill_hit[skill.id] > 100
+           actor.skill_hit[skill.id] = 100
+         end
+       end
+     end
+   end
+end
+ 
+#---------------------------------------------------------
+# ● 再カウント
+#------------------------------------------------------
+def skill_use_recount(actor, skill)
+   if actor.skill_up
+     actor.skill_level[skill.id] -= 1
+     # 威力を再計算
+     if SKILL_MIGHT_UP
+       actor.skill_power[skill.id] = skill.power
+       might = S_MIGHT[skill.id]
+       might_rate = ((might != nil and might[actor.id] != nil) ? might[actor.id] : MIGHT_RATE)
+       for i in 1...actor.skill_level[skill.id]
+         actor.skill_power[skill.id] += skill.power * might_rate / 100
+         actor.skill_power[skill.id] = actor.skill_power[skill.id].truncate
+       end
+     end
+     # SP消費再計算
+     if SP_COST_DOWN
+       actor.skill_sp_cost[skill.id] = skill.sp_cost
+       cost = S_COST[skill.id]
+       cost_rate = ((cost != nil and cost[actor.id] != nil) ? cost[actor.id] : COST_RATE)
+       for i in 1...actor.skill_level[skill.id]
+         actor.skill_sp_cost[skill.id] -= skill.sp_cost * cost_rate / 100
+         actor.skill_sp_cost[skill.id] = actor.skill_sp_cost[skill.id].truncate
+       end
+       # SP消費が0以下はありえない
+       if actor.skill_sp_cost[skill.id] < 0
+         actor.skill_sp_cost[skill.id] = 0
+       end
+     end
+     # 命中率再計算
+     if SKILL_HIT_UP
+       actor.skill_hit[skill.id] = skill.hit
+       hit = S_HIT[skill.id]
+       hit_rate = ((hit != nil and hit[actor.id] != nil) ? hit[actor.id] : HIT_RATE)
+       for i in 1...actor.skill_level[skill.id]
+         actor.skill_hit[skill.id] += skill.hit * hit_rate / 100
+         actor.skill_hit[skill.id] = actor.skill_hit[skill.id].truncate
+       end
+       # 100以上はありえない
+       if actor.skill_hit[skill.id] > 100
+         actor.skill_hit[skill.id] = 100
+       end
+     end
+     actor.skill_up = false
+   end
+   actor.skill_use[skill.id] -= 1
+end
+end
+ 
+#=================================================================
+# スキル成長によるアニメーション変化
+#=================================================================
+class Scene_Battle
+include Skill_updata
+#--------------------------------------------------------------
+# ● フレーム更新 (メインフェーズ ステップ 4 : 対象側アニメーション)
+#-----------------------------------------------------------
+alias update_phase4_step4_skillup update_phase4_step4
+def update_phase4_step4
+   update_phase4_step4_skillup
+   if @active_battler.is_a?(Game_Actor) and USE_S_ANIME
+     s_anime = S_ANIME[@skill.id]
+     # 設定がないなら無視
+     if s_anime != nil and s_anime[@active_battler.id] != nil
+       s_anime_set = s_anime[@active_battler.id]
+       for i in 0...s_anime_set.size
+         s_anime_def = s_anime_set[i]
+         # 規定レベル以上
+         if @active_battler.skill_level[@skill.id] >= s_anime_def[0]
+           # 対象側アニメーション
+           for target in @target_battlers
+             target.animation_id = s_anime_def[1]
+           end
+         end
+       end
+     end
+   end
+end
+end
+ 
+#=================================================================
+# 以下、レベルアップ表示部分（レベルアップ表示がいらないなら消してもOK）
+#=================================================================
+class Scene_Battle
+include Skill_updata
+if SHOW_SKILL_LV_UP
+#----------------------------------------------------------
+# ● フレーム更新 (メインフェーズ ステップ 2 : アクション開始)
+#----------------------------------------------------------
+alias update_phase4_step2_skillup update_phase4_step2
+def update_phase4_step2
+   if @active_battler.is_a?(Game_Actor)
+     @active_battler.skill_up = false
+   end
+   @skillup = false
+   update_phase4_step2_skillup   # 原物
+end
+ 
+#-------------------------------------------------------------
+# ● フレーム更新 (メインフェーズ ステップ 3 : 行動側アニメーション)
+#-----------------------------------------------------------
+alias update_phase4_step3_skillup update_phase4_step3
+def update_phase4_step3
+   if @active_battler.is_a?(Game_Actor) and @active_battler.skill_up != false
+     @skillup = true
+     @skill_up_window = Window_Skillup.new(@active_battler)
+     if SKILLUP_SE != nil
+       Audio.se_play("Audio/SE/" + SKILLUP_SE)
+       sleep(0.1)
+     end
+   end
+   update_phase4_step3_skillup
+end
+ 
+#--------------------------------------------------------------
+# ● フレーム更新 (メインフェーズ ステップ 5 : ダメージ表示)
+#--------------------------------------------------------------
+alias update_phase4_step5_skillup update_phase4_step5
+def update_phase4_step5
+   if @active_battler.is_a?(Game_Actor) and @skillup
+     @skill_up_window.dispose
+     @active_battler.skill_up = false
+     @skillup = false
+   end
+   update_phase4_step5_skillup     # 原物
+end
+ 
+#---------------------------------------------------------------
+# ● フレーム更新
+#----------------------------------------------------------------
+alias update_skillup update
+def update
+   if @active_battler.is_a?(Game_Actor) and @active_battler.skill_up and @skillup
+     @skill_up_window.contents_opacity -= 4
+   end
+   update_skillup              # 原物
+end
+end # if SHOW_SKILL_LV_UP
+end
+ 
+class Window_Skillup < Window_Base
+#--------------------------------------------------------------
+# ● オブジェクト初期化
+#     actor : アクター
+#-------------------------------------------------------------
+def initialize(actor)
+   super(actor.screen_x-140, 260, 250, 64)
+   self.contents = Bitmap.new(width - 32, height - 32)
+   self.opacity = 0
+   self.contents.font.color = Color.new(255, 64, 0)
+   self.contents.draw_text(80, 0, 150, 32, "LEVEL UP!")
+end
+end
+ 
+ 
+ 
+#====================================================================
+# 以下、再定義部分を含む（SP消費減少の機能がいらないなら消してもOK）
+#====================================================================
+class Window_Skill < Window_Selectable
+#----------------------------------------------------------------
+# ● 項目の描画
+#     index : 項目番号
+#-----------------------------------------------------------------
+def draw_item(index)
+   skill = @data[index]
+   if @actor.skill_can_use?(skill.id)
+     self.contents.font.color = normal_color
+   else
+     self.contents.font.color = disabled_color
+   end
+   x = 4 + index % 2 * (288 + 32)
+   y = index / 2 * 32
+   rect = Rect.new(x, y, self.width / @column_max - 32, 32)
+   self.contents.fill_rect(rect, Color.new(0, 0, 0, 0))
+   bitmap = RPG::Cache.icon(skill.icon_name)
+   opacity = self.contents.font.color == normal_color ? 255 : 128
+   self.contents.blt(x, y + 4, bitmap, Rect.new(0, 0, 24, 24), opacity)
+#-修正-----
+   @actor.skill_level[skill.id] = 0 if @actor.skill_level[skill.id] == nil
+   name_level = skill.name + "（Lv" + @actor.skill_level[skill.id].to_s + "）" 
+   self.contents.draw_text(x + 28, y, 204, 32, name_level, 0)
+   @actor.skill_sp_cost[skill.id] = skill.sp_cost if @actor.skill_sp_cost[skill.id] == nil
+   self.contents.draw_text(x + 232, y, 48, 32, @actor.skill_sp_cost[skill.id].to_s, 2)
+#----------
+end
+end
+ 
+class Scene_Skill
+#----------------------------------------------------------
+# ● フレーム更新 (ターゲットウィンドウがアクティブの場合)
+#-------------------------------------------------------------
+def update_target
+   # B ボタンが押された場合
+   if Input.trigger?(Input::B)
+     # キャンセル SE を演奏
+     $game_system.se_play($data_system.cancel_se)
+     # ターゲットウィンドウを消去
+     @skill_window.active = true
+     @target_window.visible = false
+     @target_window.active = false
+     return
+   end
+   # C ボタンが押された場合
+   if Input.trigger?(Input::C)
+     # SP 切れなどで使用できなくなった場合
+     unless @actor.skill_can_use?(@skill.id)
+       # ブザー SE を演奏
+       $game_system.se_play($data_system.buzzer_se)
+       return
+     end
+     # ターゲットが全体の場合
+     if @target_window.index == -1
+       # パーティ全体にスキルの使用効果を適用
+       used = false
+       for i in $game_party.actors
+         used |= i.skill_effect(@actor, @skill)
+       end
+     end
+     # ターゲットが使用者の場合
+     if @target_window.index <= -2
+       # ターゲットのアクターにスキルの使用効果を適用
+       target = $game_party.actors[@target_window.index + 10]
+       used = target.skill_effect(@actor, @skill)
+     end
+     # ターゲットが単体の場合
+     if @target_window.index >= 0
+       # ターゲットのアクターにスキルの使用効果を適用
+       target = $game_party.actors[@target_window.index]
+       used = target.skill_effect(@actor, @skill)
+     end
+     # スキルを使った場合
+     if used
+       # スキルの使用時 SE を演奏
+       $game_system.se_play(@skill.menu_se)
+#-----修正---------------------------------------------
+       @actor.skill_sp_cost[@skill.id] = @skill.sp_cost if @actor.skill_sp_cost[@skill.id] == nil
+       # SP 消費
+       @actor.sp -= @actor.skill_sp_cost[@skill.id]
+#------------------------------------------------
+       # 各ウィンドウの内容を再作成
+       @status_window.refresh
+       @skill_window.refresh
+       @target_window.refresh
+       # 全滅の場合
+       if $game_party.all_dead?
+         # ゲームオーバー画面に切り替え
+         $scene = Scene_Gameover.new
+         return
+       end
+       # コモンイベント ID が有効の場合
+       if @skill.common_event_id > 0
+         # コモンイベント呼び出し予約
+         $game_temp.common_event_id = @skill.common_event_id
+         # マップ画面に切り替え
+         $scene = Scene_Map.new
+         return
+       end
+     end
+     # スキルを使わなかった場合
+     unless used
+       # ブザー SE を演奏
+       $game_system.se_play($data_system.buzzer_se)
+     end
+     return
+   end
+end
+end
+ 
+class Scene_Battle
+include Skill_updata
+#------------------------------------------------------
+# ● スキルアクション 結果作成
+#-------------------------------------------------------
+alias make_skill_action_result_skill_update make_skill_action_result
+def make_skill_action_result
+   make_skill_action_result_skill_update
+   # SP 消費
+   if SP_COST_DOWN and @active_battler.is_a?(Game_Actor)
+     @active_battler.sp += @skill.sp_cost
+     @active_battler.sp -= @active_battler.skill_sp_cost[@skill.id]
+   end
+end
+end
+ 
+class Game_Battler
+#--------------------------------------------------------
+# ● スキルの使用可能判定
+#     skill_id : スキル ID
+#------------------------------------------------------
+alias skill_update_can_use? skill_can_use?
+def skill_can_use?(skill_id)
+   ret = skill_update_can_use?(skill_id)
+   if !ret and SP_COST_DOWN
+     # SP が足りない場合は使用不可となった？
+     if $data_skills[skill_id].sp_cost > self.sp
+       if self.is_a?(Game_Actor)
+         skill_sp_cost = self.skill_sp_cost[skill_id]
+         if skill_sp_cost < self.sp
+           ret = true
+         end
+       end
+     end
+   end
+   return ret
+end
+end
+ 
+#===============================================================
+# イベントスクリプト操作
+#===============================================================
+class Interpreter
+include Skill_updata
+#-----------------------------------------------------------
+# ● スキルレベル設定（レベルセット）
+#     actor_id  :   アクターID
+#     skill_id  :   スキルID
+#     level     :   設定レベル
+#-----------------------------------------------------------
+def set_skill_level(actor_id, skill_id, level)
+   actor = $game_actors[actor_id]
+   skill = $data_skills[skill_id]
+   # リミット取得
+   limit = S_LEVEL[skill_id]
+   s_limit = ( (limit != nil and limit[actor.id] != nil) ? limit[actor.id] : LEVEL_LIMIT)
+   if level > s_limit or level < 0
+     return
+   end
+   # レベル
+   actor.skill_level[skill.id] = level
+   # 使用回数
+   use_list = actor.skill_list[skill.id]
+   actor.skill_use[skill.id] = use_list[level]
+   # 威力を再計算
+   if SKILL_MIGHT_UP
+     actor.skill_power[skill.id] = skill.power
+     might = S_MIGHT[skill.id]
+     might_rate = ((might != nil and might[actor.id] != nil) ? might[actor.id] : MIGHT_RATE)
+     for i in 0...level
+       actor.skill_power[skill.id] += skill.power * might_rate / 100
+       actor.skill_power[skill.id] = actor.skill_power[skill.id].truncate
+     end
+   end
+   # SP消費再計算
+   if SP_COST_DOWN
+     actor.skill_sp_cost[skill.id] = skill.sp_cost
+     cost = S_COST[skill.id]
+     cost_rate = ((cost != nil and cost[actor.id] != nil) ? cost[actor.id] : COST_RATE)
+     for i in 0...level
+       actor.skill_sp_cost[skill.id] -= skill.sp_cost * cost_rate / 100
+       actor.skill_sp_cost[skill.id] = actor.skill_sp_cost[skill.id].truncate
+     end
+     # SP消費が0以下はありえない
+     if actor.skill_sp_cost[skill.id] < 0
+       actor.skill_sp_cost[skill.id] = 0
+     end
+   end
+   # 命中率再計算
+   if SKILL_HIT_UP
+     actor.skill_hit[skill.id] = skill.hit
+     hit = S_HIT[skill.id]
+     hit_rate = ((hit != nil and hit[actor.id] != nil) ? hit[actor.id] : HIT_RATE)
+     for i in 0...level
+       actor.skill_hit[skill.id] += skill.hit * hit_rate / 100
+       actor.skill_hit[skill.id] = actor.skill_hit[skill.id].truncate
+     end
+     # 100以上はありえない
+     if actor.skill_hit[skill.id] > 100
+       actor.skill_hit[skill.id] = 100
+     end
+   end
+end
+ 
+#---------------------------------------------------------
+# ● スキルレベル設定（レベルアップ）
+#     actor_id  :   アクターID
+#     skill_id  :   スキルID
+#--------------------------------------------------------
+def skill_level_up(actor_id, skill_id)
+   actor = $game_actors[actor_id]
+   set_skill_level(actor_id, skill_id, actor.skill_level[skill_id]+1)
+end
+ 
+#-------------------------------------------------------
+# ● スキルレベル設定（レベルダウン）
+#     actor_id  :   アクターID
+#     skill_id  :   スキルID
+#--------------------------------------------------------
+def skill_level_down(actor_id, skill_id)
+   actor = $game_actors[actor_id]
+   set_skill_level(actor_id, skill_id, actor.skill_level[skill_id]-1)
+end
+end
+ 
+#==================================================================
+# 本脚本来自[url]www.66RPG.com[/url]，使用和转载请保留此信息
+#==================================================================
