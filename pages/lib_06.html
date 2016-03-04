@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>RGSS1-scripts by RyanBernX</title>
+    <link rel="stylesheet" href="../stylesheets/styles.css">
+    <link rel="stylesheet" href="../stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/RyanBernX/RGSS1-Scripts">View On GitHub</a></li>
+          <li class="fork"><a href="https://RyanBernX.github.io/RGSS1-Scripts/">Home</a></li>
+					<li class="fork"><a href="lib_index.html">Contents</a></li>
+          <li class="downloads"><a href="https://github.com/RyanBernX/RGSS1-Scripts/zipball/gh-pages">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/RyanBernX/RGSS1-Scripts/tarball/gh-pages">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>RGSS1-scripts</h1>
+          <p>RGSS1(RMXP) scripts for RM users.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/RyanBernX">RyanBernX</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a id="rgss1-scripts" class="anchor" href="#rgss1-scripts" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>跳过标题画面</h1>
+
+<p>The script allows you to skip the title scene and go to the map scene directly.</p>
+<p>Very useful for those who use events to construct their title scenes.</p>
+
+<pre><code>#==============================================================================
+# 本脚本来自[url]www.66RPG.com[/url]，使用和转载请保留此信息
+#============================================================================== 
+ 
+ 
+class Scene_Title
+  #==============================================================================
+  # 脚本作者:朱仔メ龍 QQ:251724722
+  # 脚本转载请保留以上信息
+  #==============================================================================
+  def main
+    $data_actors        = load_data("Data/Actors.rxdata")
+    $data_classes       = load_data("Data/Classes.rxdata")
+    $data_skills        = load_data("Data/Skills.rxdata")
+    $data_items         = load_data("Data/Items.rxdata")
+    $data_weapons       = load_data("Data/Weapons.rxdata")
+    $data_armors        = load_data("Data/Armors.rxdata")
+    $data_enemies       = load_data("Data/Enemies.rxdata")
+    $data_troops        = load_data("Data/Troops.rxdata")
+    $data_states        = load_data("Data/States.rxdata")
+    $data_animations    = load_data("Data/Animations.rxdata")
+    $data_tilesets      = load_data("Data/Tilesets.rxdata")
+    $data_common_events = load_data("Data/CommonEvents.rxdata")
+    $data_system        = load_data("Data/System.rxdata")
+    $game_system = Game_System.new
+    Graphics.frame_count = 0
+    $game_temp          = Game_Temp.new
+    $game_system        = Game_System.new
+    $game_switches      = Game_Switches.new
+    $game_variables     = Game_Variables.new
+    $game_self_switches = Game_SelfSwitches.new
+    $game_screen        = Game_Screen.new
+    $game_actors        = Game_Actors.new
+    $game_party         = Game_Party.new
+    $game_troop         = Game_Troop.new
+    $game_map           = Game_Map.new
+    $game_player        = Game_Player.new
+    $game_party.setup_starting_members
+    $game_map.setup($data_system.start_map_id)
+    $game_player.moveto($data_system.start_x, $data_system.start_y)
+    $game_player.refresh
+    $game_map.autoplay
+    $game_map.update
+    $scene = Scene_Map.new
+  end
+end
+#==============================================================================
+# 本脚本来自[url]www.66RPG.com[/url]，使用和转载请保留此信息
+#==============================================================================
+</code></pre>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>

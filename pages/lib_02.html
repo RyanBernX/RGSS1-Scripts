@@ -46,7 +46,7 @@
 <p>You can assign different colors to item/weapon/armor names.</p>
 
 <pre><code>#==============================================================================
-# 本脚本来自[url]www.66RPG.com[/url]，使用和转载请保留此信息
+# 本脚本来自www.66RPG.com，使用和转载请保留此信息
 #============================================================================== 
 #
 # 脚本功能：给不同物品显示不同颜色，类似暗黑破坏神，比如套装为绿色，超级为金色
@@ -99,9 +99,9 @@ module RPG
 end
  
 # ——————————————————————————————————————
-# 本脚本原创自[url]www.66rpg.com[/url]，转载请保留此信息
+# 本脚本原创自www.66rpg.com，转载请保留此信息
 # ——————————————————————————————————————
-class Window_Base < Window
+class Window_Base &lt; Window
   #--------------------------------------------------------------------------
   # ● 描绘物品名
   #     item : 物品
@@ -120,7 +120,7 @@ class Window_Base < Window
 end
  
 # ——————————————————————————————————————
-# 本脚本原创自[url]www.66rpg.com[/url]，转载请保留此信息
+# 本脚本原创自www.66rpg.com，转载请保留此信息
 # ——————————————————————————————————————
 class Window_Item
   #--------------------------------------------------------------------------
@@ -159,7 +159,7 @@ end
 # ——————————————————————————————————————
 # 本脚本原创自[url]www.66rpg.com[/url]，转载请保留此信息
 # ——————————————————————————————————————
-class Window_EquipItem < Window_Selectable
+class Window_EquipItem &lt; Window_Selectable
   #--------------------------------------------------------------------------
   # ● 项目的描绘
   #     index : 项目符号
@@ -184,9 +184,9 @@ class Window_EquipItem < Window_Selectable
 end
  
 # ——————————————————————————————————————
-# 本脚本原创自[url]www.66rpg.com[/url]，转载请保留此信息
+# 本脚本原创自www.66rpg.com，转载请保留此信息
 # ——————————————————————————————————————
-class Window_ShopBuy < Window_Selectable
+class Window_ShopBuy &lt; Window_Selectable
   #--------------------------------------------------------------------------
   # ● 描绘羡慕
   #     index : 项目编号
@@ -204,7 +204,7 @@ class Window_ShopBuy < Window_Selectable
     end
     # 价格在所持金以下、并且所持数不是 99 的情况下为普通颜色
     # 除此之外的情况设置为无效文字色
-    if item.price <= $game_party.gold and number < 99
+    if item.price <= $game_party.gold and number &lt; 99
       self.contents.font.color = text_color(item.name_color_66RPG)
     else
       self.contents.font.color = disabled_color
@@ -222,9 +222,9 @@ class Window_ShopBuy < Window_Selectable
 end
  
 # ——————————————————————————————————————
-# 本脚本原创自[url]www.66rpg.com[/url]，转载请保留此信息
+# 本脚本原创自www.66rpg.com，转载请保留此信息
 # ——————————————————————————————————————
-class Window_ShopSell < Window_Selectable
+class Window_ShopSell &lt; Window_Selectable
   #--------------------------------------------------------------------------
   # ● 描绘项目
   #     index : 项目标号
@@ -286,7 +286,7 @@ class Window_Skill
 end
  
 #==============================================================================
-# 本脚本来自[url]www.66RPG.com[/url]，使用和转载请保留此信息
+# 本脚本来自www.66RPG.com，使用和转载请保留此信息
 #==============================================================================
 </code></pre>
       </section>
