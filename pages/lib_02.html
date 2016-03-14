@@ -57,43 +57,55 @@
 # ——————————————————————————————————————
 module RPG
   class Skill
-    def description
-      description = @description.split(/@/)[0]
-      return description != nil ? description : ''
+    Regex_Color = /%color\[(\d+)\]/
+    unless method_defined? :rb_description_20160314
+      alias rb_description_20160314 description
+      def description
+        return rb_description_20160314.gsub(Regex_Color, "")
+      end
     end
     def name_color_66RPG
-      name_color = @description.split(/@/)[1]
-      return name_color != nil ? name_color.to_i : 0
+      Regex_Color =~ @description
+      return $1.to_i
     end
   end
   class Weapon
-    def description
-      description = @description.split(/@/)[0]
-      return description != nil ? description : ''
+    Regex_Color = /%color\[(\d+)\]/
+    unless method_defined? :rb_description_20160314
+      alias rb_description_20160314 description
+      def description
+        return rb_description_20160314.gsub(Regex_Color, "")
+      end
     end
     def name_color_66RPG
-      name_color = @description.split(/@/)[1]
-      return name_color != nil ? name_color.to_i : 0
+      Regex_Color =~ @description
+      return $1.to_i
     end
   end
   class Item
-    def description
-      description = @description.split(/@/)[0]
-      return description != nil ? description : ''
+    Regex_Color = /%color\[(\d+)\]/
+    unless method_defined? :rb_description_20160314
+      alias rb_description_20160314 description
+      def description
+        return rb_description_20160314.gsub(Regex_Color, "")
+      end
     end
     def name_color_66RPG
-      name_color = @description.split(/@/)[1]
-      return name_color != nil ? name_color.to_i : 0
+      Regex_Color =~ @description
+      return $1.to_i
     end
   end
   class Armor
-    def description
-      description = @description.split(/@/)[0]
-      return description != nil ? description : ''
+    Regex_Color = /%color\[(\d+)\]/
+    unless method_defined? :rb_description_20160314
+      alias rb_description_20160314 description
+      def description
+        return rb_description_20160314.gsub(Regex_Color, "")
+      end
     end
     def name_color_66RPG
-      name_color = @description.split(/@/)[1]
-      return name != nil ? name_color.to_i : 0
+      Regex_Color =~ @description
+      return $1.to_i
     end
   end
 end
